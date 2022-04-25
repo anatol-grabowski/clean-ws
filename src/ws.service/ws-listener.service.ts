@@ -167,6 +167,9 @@ export class WsListenerService {
     return { template, listener }
   }
 
+  /**
+   * Remove listener.
+   */
   off<T = any>(template: Template, listener: Listener<T>): void {
     const index = this.liteners.findIndex((sub) => {
       return sub.listener === listener && sub.template === template
@@ -176,6 +179,10 @@ export class WsListenerService {
     }
   }
 
+  /**
+   * Get a promise for one message matching a template.
+   * @throws Error on timeout.
+   */
   async once<T = any>(template: Template, timeoutMs = this.timeoutMs): Promise<T> {
     const promise = new Promise((res, rej) => {
       const cb = (msg) => {
