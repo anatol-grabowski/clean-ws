@@ -1,0 +1,36 @@
+{
+  "name": "clear-ws",
+  "version": "1.0.0",
+  "description": "Route websocket messages. Reconnect and resubscribe.",
+  "keywords": [
+    "ws",
+    "websocket",
+    "listen",
+    "route",
+    "template",
+    "message",
+    "reconnect",
+    "health",
+    "ping",
+    "subscribe"
+  ],
+  "main": "dist/index.js",
+  "dependencies": {
+    "debug": "^4.1.1",
+    "expect": "^27.5.1",
+    "isomorphic-ws": "^4.0.1",
+    "sleep-promise": "^9.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "typescript": "^4.6.3",
+    "jest": "^27.5.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

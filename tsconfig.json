@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "allowJs": true,
+    "noImplicitAny": false,
+    "incremental": false,
+    "strict": true,
+    "listEmittedFiles": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "strictNullChecks": false,
+    "experimentalDecorators": true,
+    "esModuleInterop": true
+  },
+  "include": ["src"]
+}
