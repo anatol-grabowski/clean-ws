@@ -104,9 +104,10 @@ export class WsListenerService {
   }
 
   // TODO: think if `listeners` should be cleared right after a `close` call.
+  // Browser implementation of ws doesn't have `removeAllListeners`.
+  // Don't clear any listeners for now hoping that `close` is enough.
   protected _reconnectableClose(event) {
     debug('_close', event.code, event.reason)
-    this.ws.removeAllListeners()
     this.liteners = []
     this.ws = null
   }
