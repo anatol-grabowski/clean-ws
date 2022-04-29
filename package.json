@@ -1,6 +1,6 @@
 {
   "name": "clear-ws",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Route websocket messages. Reconnect and resubscribe.",
   "keywords": [
     "ws",
@@ -27,12 +27,13 @@
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",
-    "typescript": "^4.6.3",
-    "jest": "^27.5.1"
+    "jest": "^27.5.1",
+    "typescript": "^4.6.3"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "clean": "rm -rf ./dist",
+    "build": "yarn run clean && tsc",
     "start": "DEBUG=* node example.js"
   },
   "author": "",
