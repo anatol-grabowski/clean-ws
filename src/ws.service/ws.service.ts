@@ -86,9 +86,7 @@ export class WsService extends WsListenerService {
         throw Error('Ping heartbeatMs or checkAliveMs is configured but request or response is not')
       }
     }
-    if (this.ws != null) {
-      this._init() // in case an opened ws passed to a constructor
-    }
+    this._init() // in case an opened ws passed to a constructor
   }
 
   protected _init() {

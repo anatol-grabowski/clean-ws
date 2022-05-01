@@ -6,6 +6,7 @@ describe('WsService', () => {
   const port = 8003
   const url = `ws://localhost:${port}`
   let server: HttpWsServer
+  let ws: WsService
 
   beforeEach(async () => {
     server = new HttpWsServer(port)
@@ -13,6 +14,7 @@ describe('WsService', () => {
   })
 
   afterEach(async () => {
+    await ws.close()
     await server.close({ force: true })
   })
 
@@ -25,7 +27,7 @@ describe('WsService', () => {
       const listener = jest.fn()
 
       const wsOptions = { url }
-      const ws = new WsService(wsOptions)
+      ws = new WsService(wsOptions)
       await ws.open()
       ws.on({ type: 'hello' }, listener)
       await sleep(100)
@@ -39,7 +41,7 @@ describe('WsService', () => {
       })
 
       const wsOptions = { url }
-      const ws = new WsService(wsOptions)
+      ws = new WsService(wsOptions)
       await ws.open()
       const msg = await ws.once({ type: 'hello' })
       expect(msg.value).toBe('world')
@@ -52,7 +54,7 @@ describe('WsService', () => {
       })
 
       const wsOptions = { url }
-      const ws = new WsService(wsOptions)
+      ws = new WsService(wsOptions)
       await ws.open()
       const msg = await ws.once({ type: 'hello' })
       expect(msg.value).toBe('world')
@@ -68,14 +70,13 @@ describe('WsService', () => {
       const listener = jest.fn()
 
       const wsOptions = { url, reconnect: { delayMs: 500 } }
-      const ws = new WsService(wsOptions)
+      ws = new WsService(wsOptions)
       await ws.open()
       ws.on({ type: 'hello' }, listener, { keep: true })
 
       server.destroyAllSockets()
 
       await sleep(1000)
-      await ws.close()
       expect(listener).toBeCalledTimes(2)
     })
 
@@ -87,7 +88,7 @@ describe('WsService', () => {
       const listener = jest.fn()
 
       const wsOptions = { url, reconnect: { delayMs: 500 } }
-      const ws = new WsService(wsOptions)
+      ws = new WsService(wsOptions)
       await ws.open()
       ws.on({ type: 'hello' }, listener, { keep: true })
 
@@ -96,11 +97,33 @@ describe('WsService', () => {
 
       await server.close({ force: true })
       await sleep(750) // let one reconnect fail
-      await server.listen()
 
+      await server.listen()
       await sleep(500)
-      await ws.close()
+
       expect(listener).toBeCalledTimes(2)
+    })
+
+    it('reconnects if server down on the first attempt', async () => {
+      await server.close({ force: true })
+      server.wsServer.on('connection', async (ws) => {
+        const msg = JSON.stringify({ type: 'hello', value: 'world' })
+        ws.send(msg)
+      })
+      const listener = jest.fn()
+
+      const wsOptions = { url, reconnect: { delayMs: 500 } }
+      ws = new WsService(wsOptions)
+      void ws.open()
+      ws.on({ type: 'hello' }, listener, { keep: true })
+
+      await sleep(1750)
+      expect(listener).toBeCalledTimes(0)
+
+      await server.listen()
+      await sleep(500)
+
+      expect(listener).toBeCalledTimes(1)
     })
   })
 })
