@@ -33,11 +33,12 @@
     "typescript": "^4.6.3"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest ./src",
     "test:e2e": "DEBUG=ws* jest --detectOpenHandles ./e2e",
     "clean": "rm -rf ./dist",
     "build": "yarn run clean && tsc",
-    "start": "DEBUG=ws* node example.js"
+    "start": "DEBUG=ws* node example.js",
+    "prepublishOnly": "yarn run test && yarn run test:e2e && yarn run build"
   },
   "author": "",
   "license": "ISC"

@@ -1,4 +1,4 @@
-import { HttpWsServer } from './utils/http-ws-server'
+import { HttpWsServer } from '../src/http-ws-server'
 import { WsService } from '../src/ws.service'
 import sleep from 'sleep-promise'
 
