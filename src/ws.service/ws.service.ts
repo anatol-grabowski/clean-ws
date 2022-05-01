@@ -87,7 +87,7 @@ export class WsService extends WsListenerService {
       }
     }
     if (this.ws != null) {
-      this._init()
+      this._init() // in case an opened ws passed to a constructor
     }
   }
 
@@ -100,7 +100,20 @@ export class WsService extends WsListenerService {
   @singleRunning()
   override async open() {
     debug('open')
-    await super.open()
+    while (true) {
+      try {
+        await super.open()
+        break
+      } catch (err: any) {
+        debug('error open', err?.message)
+        if (this.reconnectConf.delayMs == null) throw err
+        if (!this.shouldReconnect) return
+        debug(`will reopen in ${this.reconnectConf.delayMs}ms`)
+        await sleep(this.reconnectConf.delayMs)
+        if (!this.shouldReconnect) return
+        debug('reopen')
+      }
+    }
     this._init()
   }
 
@@ -139,7 +152,7 @@ export class WsService extends WsListenerService {
     await this.send(req)
     const t0 = Date.now()
     try {
-      const res = await this.once(pingConf.response, pingConf.timeoutMs)
+      const res = await this.once(pingConf.response, { timeoutMs: pingConf.timeoutMs })
       debug('pong', Date.now() - t0, 'ms')
       return true
     } catch (err) {
@@ -177,12 +190,13 @@ export class WsService extends WsListenerService {
   protected _configureAutoReconnect() {
     if (this.reconnectConf.delayMs == null) return
     if (this.isReconnectConfigured) return
-    if (!this.isOpen) return
     this.shouldReconnect = true
+    if (!this.isOpen) return
     debug('init auto reconnect')
 
     this.ws.addEventListener('close', async () => {
       if (!this.shouldReconnect) return
+      debug(`will reconnect in ${this.reconnectConf.delayMs}ms`)
       await sleep(this.reconnectConf.delayMs)
       await this.reconnect()
     })

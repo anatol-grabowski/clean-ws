@@ -12,7 +12,7 @@ This package aims to resolve these issues by:
 
 - Send and receive messages (can be used on client and on server):
   - `open`, `close` and `send` methods return promises.
-  - `on` method accepts a template object or a matcher function to listen for matching incoming messages.
+  - `on` method accepts a template object or a matcher function to listen\* for matching incoming messages.
   - `once` method returns a promise to await for a single incoming message.
 - Reconnect:
   - Send ping requests on a set interval (`ping.heartbeatMs` option).
@@ -20,7 +20,9 @@ This package aims to resolve these issues by:
   - Restore dead connection and subscriptions (`reconnect.delayMs` option).
   - `subscribe` method accepts a function that performs steps required to restore a subsciption.
 
-Check out typescript types and examples below for more details.
+\*) NOTE: Listeners are cleared after the connection is closed. Use `keep: true` option or `subscribe` to preserve listeners after reconnect.
+
+Check out typescript types, [tests](./e2e/ws-service.spec.ts) and examples below for more details.
 
 ## Examples
 

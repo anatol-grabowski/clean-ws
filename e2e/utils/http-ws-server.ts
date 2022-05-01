@@ -60,7 +60,9 @@ export class HttpWsServer {
     const { httpServer, wsServer } = createHttpWsServer()
     httpServer.on('connection', (socket) => {
       this.sockets.add(socket)
-      socket.on('close', () => this.sockets.delete(socket))
+      socket.on('close', () => {
+        this.sockets.delete(socket)
+      })
     })
     this.httpServer = httpServer
     this.wsServer = wsServer
@@ -70,13 +72,17 @@ export class HttpWsServer {
     await listen(this.httpServer, this.port)
   }
 
+  destroyAllSockets() {
+    const { sockets } = this
+    for (const socket of sockets) {
+      socket.destroy()
+      sockets.delete(socket)
+    }
+  }
+
   async close({ force = false } = {}) {
     if (force) {
-      const { sockets } = this
-      for (const socket of sockets) {
-        socket.destroy()
-        sockets.delete(socket)
-      }
+      this.destroyAllSockets()
     }
     await close(this.httpServer)
   }

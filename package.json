@@ -34,10 +34,10 @@
   },
   "scripts": {
     "test": "jest",
-    "test:e2e": "DEBUG=ws-* jest ./e2e",
+    "test:e2e": "DEBUG=ws* jest --detectOpenHandles ./e2e",
     "clean": "rm -rf ./dist",
     "build": "yarn run clean && tsc",
-    "start": "DEBUG=* node example.js"
+    "start": "DEBUG=ws* node example.js"
   },
   "author": "",
   "license": "ISC"

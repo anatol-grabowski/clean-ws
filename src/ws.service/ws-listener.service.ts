@@ -25,9 +25,18 @@ export type Template = any | ((msg: any) => boolean)
 
 export type Listener<T = any> = (msg: T) => void
 
+export type ListenerOptions = {
+  /**
+   * Normally listeners are removed after close.
+   * Keep listening after reconnect.
+   */
+  keep?: boolean
+}
+
 interface TemplateListener {
   template: Template
   listener: Listener
+  options: ListenerOptions
 }
 
 export type WsListenerServiceConfig = {
@@ -88,8 +97,9 @@ export class WsListenerService {
       ws.addEventListener(
         'error',
         (event) => {
-          console.error('ws error', event)
+          debug('error', event.message)
           this.reconnectableClose(3001, 'ws error')
+          rej(event.error)
         },
         { once: true },
       )
@@ -116,7 +126,7 @@ export class WsListenerService {
   // Don't clear any listeners for now hoping that `close` is enough.
   protected _reconnectableClose(event) {
     debug('_close', event.code, event.reason)
-    this.liteners = []
+    this.liteners = this.liteners.filter((l) => l.options.keep)
     this.ws = null
   }
 
@@ -130,7 +140,14 @@ export class WsListenerService {
       if (this.ws.readyState !== WebSocket.CLOSED) {
         await new Promise<void>((res) => {
           ws.close(code, reason) // will trigger `_close`
-          ws.addEventListener('close', (event) => res, { once: true })
+          ws.addEventListener(
+            'close',
+            (event) => {
+              debug('closed')
+              res()
+            },
+            { once: true },
+          )
         })
       } else {
         this._reconnectableClose({})
@@ -138,7 +155,12 @@ export class WsListenerService {
     }
   }
 
-  protected _handleMessage(event) {
+  /**
+   * It is possible for an 'open' event and the first 'message's to come on the same event loop cycle (only if server and client are in the same thread?).
+   * Add sleep before processing each message to avoid skipped messages.
+   */
+  protected async _handleMessage(event) {
+    await sleep(0) // make sure the first messages aren't handled on the same iteration of event loop as 'open'
     debug('recv', event.data)
     const msg = JSON.parse(event.data)
     let isMsgHandled = false
@@ -171,8 +193,9 @@ export class WsListenerService {
   on<T = any>(
     template: Template,
     listener: Listener<T>,
+    options: ListenerOptions = {},
   ): { template: Template; listener: Listener } {
-    const sub = { template, listener }
+    const sub = { template, listener, options }
     this.liteners.push(sub)
     return { template, listener }
   }
@@ -193,7 +216,10 @@ export class WsListenerService {
    * Get a promise for one message matching a template.
    * @throws Error on timeout.
    */
-  async once<T = any>(template: Template, timeoutMs = this.timeoutMs): Promise<T> {
+  async once<T = any>(
+    template: Template,
+    { timeoutMs = this.timeoutMs, ...options }: ListenerOptions & { timeoutMs?: number } = {},
+  ): Promise<T> {
     const promise = new Promise((res, rej) => {
       const cb = (msg) => {
         clearTimeout(timeoutId)
@@ -204,7 +230,7 @@ export class WsListenerService {
         this.off(template, cb)
         rej(Error(`Timeout ${timeoutMs}ms`))
       }, timeoutMs)
-      this.on(template, cb)
+      this.on(template, cb, options)
     })
     const message = await promise
     return message as T
