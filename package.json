@@ -1,6 +1,6 @@
 {
   "name": "clear-ws",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Route websocket messages. Reconnect and resubscribe.",
   "keywords": [
     "ws",
