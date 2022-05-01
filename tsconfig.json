@@ -11,7 +11,8 @@
     "declaration": true,
     "strictNullChecks": false,
     "experimentalDecorators": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "paths": {}
   },
   "include": ["src"]
 }

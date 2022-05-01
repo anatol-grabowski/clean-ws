@@ -85,14 +85,22 @@ export class WsListenerService {
       const timeoutId = setTimeout(timeoutCb, this.timeoutMs)
       ws.addEventListener('open', openCb, { once: true })
       ws.addEventListener('message', (event) => this._handleMessage(event))
-      ws.addEventListener('error', (event) => {
-        console.error('ws error', event)
-        this.reconnectableClose(3001, 'ws error')
-      })
-      ws.addEventListener('close', async (event) => {
-        await sleep(0) // let all 'close' handlers to be triggered, TODO: think if there may be a problem with it
-        this._reconnectableClose(event)
-      })
+      ws.addEventListener(
+        'error',
+        (event) => {
+          console.error('ws error', event)
+          this.reconnectableClose(3001, 'ws error')
+        },
+        { once: true },
+      )
+      ws.addEventListener(
+        'close',
+        async (event) => {
+          await sleep(0) // let all 'close' handlers to be triggered, TODO: think if there may be a problem with it
+          this._reconnectableClose(event)
+        },
+        { once: true },
+      )
     })
   }
 
@@ -117,11 +125,12 @@ export class WsListenerService {
    */
   protected async reconnectableClose(code?: number, reason?: string): Promise<void> {
     if (this.ws != null) {
+      const { ws } = this
       debug('close', code, reason)
       if (this.ws.readyState !== WebSocket.CLOSED) {
         await new Promise<void>((res) => {
-          this.ws.close(code, reason) // will trigger `_close`
-          this.ws.addEventListener('close', res, { once: true })
+          ws.close(code, reason) // will trigger `_close`
+          ws.addEventListener('close', (event) => res, { once: true })
         })
       } else {
         this._reconnectableClose({})
